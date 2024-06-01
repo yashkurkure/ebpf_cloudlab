@@ -9,6 +9,7 @@ sudo apt -y install software-properties-common
 sudo add-apt-repository --y --update ppa:ansible/ansible
 sudo apt -y install ansible
 sudo apt -y install python3-pip
+pip3 install ansible-runner
 
 # Generate Ansible Inventory
 python3 /local/repository/ansible/inventory.py -n $num_nodes -C $inventory_path
