@@ -1,3 +1,4 @@
+import os
 import ansible_runner
 from rich.progress import Progress
 from rich.logging import RichHandler
@@ -7,6 +8,9 @@ import time
 # Create a timestamp for the log directory
 timestamp = time.strftime("%Y%m%d-%H%M%S")
 log_dir = f"/local/ansible_logs/log_{timestamp}/"
+
+# Create the log directory if it doesn't exist
+os.makedirs(log_dir, exist_ok=True)  # exist_ok=True prevents errors if the directory already exists
 
 # Set up logging
 logging.basicConfig(
