@@ -4,9 +4,10 @@ import os
 inventory_path = "/local/cluster_inventory.yml"
 
 playbooks = [
+    ("/local/repository/ansible/nfs.yml", None),
     ("/local/repository/ansible/mpich.yml", None),
     ("/local/repository/ansible/ssh.yml", {"username": "ykurkure"}),
-    ("/local/repository/ansible/nfs.yml", None),
+    ("/local/repository/ansible/ebpf.yml", None),
 ]
 
 for playbook_path, extravars in playbooks:
