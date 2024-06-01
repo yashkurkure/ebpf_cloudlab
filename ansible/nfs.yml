@@ -1,0 +1,110 @@
+---
+- name: Configure NFS server.
+  become: true
+  hosts: nfsnode
+  tasks:
+
+    - name: Update & install nfs-kernel-server
+      ansible.builtin.apt:
+        update_cache: yes
+        pkg:
+        - nfs-kernel-server
+
+    - name: Configure NFS directory pbsusers 
+      file:
+        path: /exports/shared
+        state: directory
+        owner: root 
+        group: "{{ common_user_group }}"
+        mode: '0775' 
+
+    - name: Ensure symbolic link for pbsusers in root exists
+      file:
+        src: /exports/shared
+        dest: /shared
+        state: link
+        owner: root 
+        group: "{{ common_user_group }}"
+        mode: '0775'
+
+    - name: Backup original /etc/exports (if not already backed up)
+      stat:
+        path: /etc/exports.orig
+      register: exports_backup_state
+
+    - name: Backup original /etc/exports
+      command: cp /etc/exports /etc/exports.orig
+      when: not exports_backup_state.stat.exists
+    
+    - name: Ensure export exists in /etc/exports
+      lineinfile:
+        path: /etc/exports
+        line: "/exports/shared *(rw,no_subtree_check,insecure,no_root_squash)"
+        state: present
+
+    - name: Ensure nfs-kernel-server is installed
+      package:
+        name: nfs-kernel-server
+        state: present
+
+    - name: Manage nfs-kernel-server service
+      service:
+        name: nfs-kernel-server
+        state: restarted
+        enabled: yes
+
+    - name: Create test files.
+      shell: |
+        echo "Hello from $(hostname)" >> /shared/test.txt
+
+- name: Configure NFS clients.
+  become: true
+  hosts: computenodes
+  tasks:
+
+    - name: Update & install nfs-common and autofs
+      ansible.builtin.apt:
+        update_cache: yes
+        pkg:
+        - nfs-common
+        - autofs
+
+    - name: Configure NFS directory pbsusers 
+      file:
+        path: /mnt/nfs/shared
+        state: directory
+        owner: root 
+        group: "{{ common_user_group }}"
+        mode: '0775' 
+
+    - name: Ensure symbolic link for pbsusers in root exists
+      file:
+        src: /mnt/nfs/shared
+        dest: /shared
+        state: link
+        owner: root 
+        group: "{{ common_user_group }}"
+        mode: '0775'
+
+    - name: Ensure AutoFS /etc/auto.master entry exists
+      lineinfile:
+        dest: /etc/auto.master
+        line: "/mnt/nfs /etc/auto.nfs --ghost --timeout=60"
+        create: yes
+
+    - name: Ensure AutoFS /etc/auto.nfs entry exists
+      lineinfile:
+        dest: /etc/auto.nfs
+        line: "shared -fstype=nfs4,rw {{ nfshostname }}:/exports/shared"
+        create: yes
+
+    - name: Ensure autofs is installed
+      package:
+        name: autofs
+        state: present
+
+    - name: Manage autofs service
+      service:
+        name: autofs
+        state: restarted
+        enabled: yes

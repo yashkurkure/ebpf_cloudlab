@@ -1,0 +1,68 @@
+- name: Install bpf
+  become: true
+  hosts: all
+  tasks:
+
+    - name: Update & Install deps
+      ansible.builtin.apt:
+        update_cache: yes
+        pkg:
+        - zip
+        - bison
+        - build-essential
+        - cmake
+        - flex
+        - git
+        - libedit-dev
+        - libllvm12
+        - llvm-12-dev 
+        - libclang-12-dev
+        - python
+        - zlib1g-dev
+        - libelf-dev
+        - libfl-dev
+        - python3-setuptools
+        - liblzma-dev
+        - arping
+        - iperf
+
+    - name: Clone BCC repository (if not present)
+      git:
+        repo: https://github.com/iovisor/bcc.git
+        dest: /local/bcc
+        version: master
+
+    - name: Create build directory (if not present)
+      file:
+        path: /local/bcc/build
+        state: directory
+    
+    - name: Configure BCC build
+      shell: cmake ..
+      args:
+        chdir: /local/bcc/build
+
+    - name: Make BCC
+      shell: make
+      args:
+        chdir: /local/bcc/build
+
+    - name: Install BCC
+      shell: make install
+      args:
+        chdir: /local/bcc/build
+    
+    - name: Configure Python3 bindings (if not present)
+      shell: cmake -DPYTHON_CMD=python3 ..
+      args:
+        chdir: /local/bcc/build
+
+    - name: Make Python3 bindings
+      shell: make
+      args:
+        chdir: /local/bcc/build/src/python
+
+    - name: Install Python3 bindings
+      shell: make install
+      args:
+        chdir: /local/bcc/build/src/python
