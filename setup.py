@@ -1,6 +1,4 @@
 from ansible_runner import run
-import subprocess
-import os
 import os
 
 inventory_path = "/local/cluster_inventory.yml"
@@ -23,13 +21,3 @@ for playbook_path, extravars in playbooks:
     else:
         print(f"Error executing playbook '{playbook_path}':")
         print(result.stderr)
-
-
-source_path = "/local/repository/mpi_job"
-destination_path = "/shared"
-
-if os.path.exists(os.path.join(destination_path, "mpi_job")):
-    subprocess.run(["rm", "-rf", os.path.join(destination_path, "mpi_job")], check=True)  # Remove existing directory
-
-subprocess.run(["cp", "-r", source_path, destination_path], check=True)
-print(f"Directory '{source_path}' copied to '{destination_path}' successfully.")
