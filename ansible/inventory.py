@@ -11,7 +11,7 @@ def generate(args):
         #-- Compute Nodes --
         f.write(f'computenodes:\n')
         f.write(f'  hosts:\n')
-        for i in range(0, args.number_of_worker_nodes):
+        for i in range(0, args.number_of_compute_nodes):
             node_name = hostname.replace('node0',f'node{i}')
             f.write(f'    {node_name}:\n')
         #-- Data Nodes --
