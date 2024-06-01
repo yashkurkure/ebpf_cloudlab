@@ -1,0 +1,1 @@
+mpirun --hostfile node_file_example -np 5 ./avg
