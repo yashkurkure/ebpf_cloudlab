@@ -1,7 +1,7 @@
 #!/bin/bash
 
-num_nodes=$2
-inventory_path=$3
+num_nodes=$1
+inventory_path=$2
 
 # Install Ansible
 sudo apt -y update
