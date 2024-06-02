@@ -1,5 +1,9 @@
 ansible-playbook \
     -i /local/cluster_inventory.yml\
+    /local/repository/ansible/ebpf.yml
+
+ansible-playbook \
+    -i /local/cluster_inventory.yml\
     /local/repository/ansible/nfs.yml
 
 ansible-playbook \
