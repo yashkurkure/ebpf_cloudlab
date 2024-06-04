@@ -38,9 +38,7 @@ start = 0
 def print_event(cpu, data, size):
     global start
     event = b["events"].event(data)
-    if start == 0:
-        start = event.ts
-    time_s = (float(event.ts - start)) / 1000000000
+    time_s = (float(event.ts)) / 1000000000
     printb(
         b"%-18.9f %-16s %-6d %s"
         % (time_s, event.comm, event.pid, b"Hello, perf_output!")
