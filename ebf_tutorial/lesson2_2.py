@@ -1,11 +1,13 @@
 from bcc import BPF
 from bcc.utils import printb
+from bcc.syscall import syscall_name, syscalls
+
 
 def replace_syscall(original_string, replacement_text):
     new_string = original_string[:]
     new_string = new_string.replace("SYSCALL", replacement_text)
     return new_string
-
+    
 header = '''
 #include <linux/sched.h>
 
@@ -52,32 +54,43 @@ int syscall_retprobe_SYSCALL(void *ctx) {
 }
 '''
 
-# execve
-execve_code = replace_syscall(probe_code, 'execve')
-
-# fork
-fork_code = replace_syscall(probe_code, 'fork')
-
-# exit
-exit_code = replace_syscall(probe_code, 'exit')
-
-# merge all code
-program = header + '\n' + execve_code + '\n' + fork_code + '\n' + exit_code
-
-print(program)
+program = header + '\n'
+for syscall_name in syscalls.values():
+    name = syscall_name.decode()
+    program += replace_syscall(probe_code, name) + '\n'
 
 b = BPF(text=program)
-execve_fnname = b.get_syscall_fnname("execve")
-b.attach_kprobe(event=execve_fnname, fn_name="syscall_probe_execve")
-b.attach_kretprobe(event=execve_fnname, fn_name="syscall_retprobe_execve")
+for syscall_name in syscalls.values():
+    name = syscall_name.decode()
+    syscall_fnname = b.get_syscall_fnname(name)
+    b.attach_kprobe(event=syscall_fnname, fn_name=f'syscall_probe_{name}')
+    b.attach_kretprobe(event=syscall_fnname, fn_name=f'syscall_retprobe_{name}')
 
-fork_fnname = b.get_syscall_fnname("fork")
-b.attach_kprobe(event=execve_fnname, fn_name="syscall_probe_fork")
-b.attach_kretprobe(event=execve_fnname, fn_name="syscall_retprobe_fork")
+# # execve
+# execve_code = replace_syscall(probe_code, 'execve')
 
-fork_fnname = b.get_syscall_fnname("exit")
-b.attach_kprobe(event=execve_fnname, fn_name="syscall_probe_exit")
-b.attach_kretprobe(event=execve_fnname, fn_name="syscall_retprobe_exit")
+# # fork
+# fork_code = replace_syscall(probe_code, 'fork')
+
+# # exit
+# exit_code = replace_syscall(probe_code, 'exit')
+
+# # merge all code
+# program = header + '\n' + execve_code + '\n' + fork_code + '\n' + exit_code
+
+
+
+# execve_fnname = b.get_syscall_fnname("execve")
+# b.attach_kprobe(event=execve_fnname, fn_name="syscall_probe_execve")
+# b.attach_kretprobe(event=execve_fnname, fn_name="syscall_retprobe_execve")
+
+# fork_fnname = b.get_syscall_fnname("fork")
+# b.attach_kprobe(event=execve_fnname, fn_name="syscall_probe_fork")
+# b.attach_kretprobe(event=execve_fnname, fn_name="syscall_retprobe_fork")
+
+# fork_fnname = b.get_syscall_fnname("exit")
+# b.attach_kprobe(event=execve_fnname, fn_name="syscall_probe_exit")
+# b.attach_kretprobe(event=execve_fnname, fn_name="syscall_retprobe_exit")
 
 # header
 print('Tracing syscalls... Ctrl-C to end.')
@@ -85,7 +98,6 @@ print("%-18s %-16s %-6s %s %s" % ("TIME(s)", "COMM", "PID", "CATEGORY", "SYSCALL
 
 # process event
 start = 0
-
 
 def print_event(cpu, data, size):
     global start
