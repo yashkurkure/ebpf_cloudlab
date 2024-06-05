@@ -24,7 +24,8 @@ probe_code = '''
 int syscall_probe_SYSCALL(void *ctx) {
     struct data_t data = {};
 
-    data.syscall_name = "SYSCALL\\0";
+    const char *syscall_name_ptr = "SYSCALL";  
+    bpf_probe_read_str(&data.syscall_name, sizeof(data.syscall_name), syscall_name_ptr);
     data.category = 0;
     data.pid = bpf_get_current_pid_tgid();
     data.ts = bpf_ktime_get_ns();
@@ -38,7 +39,8 @@ int syscall_probe_SYSCALL(void *ctx) {
 int syscall_retprobe_SYSCALL(void *ctx) {
     struct data_t data = {};
 
-    data.syscall_name = "SYSCALL\\0";
+    const char *syscall_name_ptr = "SYSCALL";  
+    bpf_probe_read_str(&data.syscall_name, sizeof(data.syscall_name), syscall_name_ptr);
     data.category = 1;
     data.pid = bpf_get_current_pid_tgid();
     data.ts = bpf_ktime_get_ns();
