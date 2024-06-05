@@ -57,7 +57,7 @@ fork_code = replace_syscall(probe_code, 'fork')
 exit_code = replace_syscall(probe_code, 'exit')
 
 # merge all code
-program = header + '\n' + execve_code
+program = header + '\n' + execve_code + '\n' + fork_code + '\n' + exit_code
 
 b = BPF(text=program)
 execve_fnname = b.get_syscall_fnname("execve")
