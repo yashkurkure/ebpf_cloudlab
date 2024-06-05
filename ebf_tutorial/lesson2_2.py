@@ -3,14 +3,14 @@ from bcc.utils import printb
 from bcc.syscall import syscall_name, syscalls
 
 list_syscalls = [
-    'read',
+#'read',
 #'write',
     'open',
     'close',
     'stat',
     'fstat',
     'lstat',
-    'poll',
+#'poll',
     'lseek',
     'mmap',
     'execve',
