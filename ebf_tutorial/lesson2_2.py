@@ -50,6 +50,12 @@ int syscall_retprobe_SYSCALL(void *ctx) {
 # execve
 execve_code = replace_syscall(probe_code, 'execve')
 
+# fork
+fork_code = replace_syscall(probe_code, 'fork')
+
+# exit
+exit_code = replace_syscall(probe_code, 'exit')
+
 # merge all code
 program = header + '\n' + execve_code
 
@@ -58,7 +64,16 @@ execve_fnname = b.get_syscall_fnname("execve")
 b.attach_kprobe(event=execve_fnname, fn_name="syscall_probe_execve")
 b.attach_kretprobe(event=execve_fnname, fn_name="syscall_retprobe_execve")
 
+fork_fnname = b.get_syscall_fnname("fork")
+b.attach_kprobe(event=execve_fnname, fn_name="syscall_probe_fork")
+b.attach_kretprobe(event=execve_fnname, fn_name="syscall_retprobe_fork")
+
+fork_fnname = b.get_syscall_fnname("exit")
+b.attach_kprobe(event=execve_fnname, fn_name="syscall_probe_exit")
+b.attach_kretprobe(event=execve_fnname, fn_name="syscall_retprobe_exit")
+
 # header
+print('Tracing syscalls... Ctrl-C to end.')
 print("%-18s %-16s %-6s %s" % ("TIME(s)", "COMM", "PID", "CATEGORY"))
 
 # process event
@@ -75,7 +90,6 @@ def print_event(cpu, data, size):
     )
 
 # loop with callback to print_event
-print('Tracing execve()... Ctrl-C to end.')
 b["events"].open_perf_buffer(print_event)
 while 1:
     try:
