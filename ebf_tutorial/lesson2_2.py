@@ -5,13 +5,6 @@ from bcc.syscall import syscall_name, syscalls
 list_syscalls = [
 #'read',
 #'write',
-    'open',
-    'close',
-    'stat',
-    'fstat',
-    'lstat',
-#'poll',
-    'lseek',
     'mmap',
     'execve',
     'fork',
@@ -114,7 +107,7 @@ for syscall_name in list_syscalls:
 
 # header
 print('Tracing syscalls... Ctrl-C to end.')
-print("%-18s %-16s %-6s %s %s" % ("TIME(s)", "COMM", "PID", "CATEGORY", "SYSCALL NAME"))
+print("%-18s %-16s %-6s %-6s %-6s" % ("TIME(s)", "COMM", "PID", "CATEGORY", "SYSCALL NAME"))
 
 # process event
 start = 0
@@ -124,8 +117,8 @@ def print_event(cpu, data, size):
     event = b["events"].event(data)
     time_s = (float(event.ts)) / 1000000000
     printb(
-        b"%-18.9f %-16s %-6d %d %s"
-        % (time_s, event.comm, event.pid, event.category, event.syscall_name)
+        b"%0d %-18.9f %-16s %-6d %d %-6s"
+        % (cpu, time_s, event.comm, event.pid, event.category, event.syscall_name)
     )
 
 # loop with callback to print_event
