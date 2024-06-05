@@ -1,7 +1,12 @@
 from bcc import BPF
 from bcc.utils import printb
 
-program = '''
+def replace_syscall(original_string, replacement_text):
+    new_string = original_string[:]
+    new_string = new_string.replace("SYSCALL", replacement_text)
+    return new_string
+
+header = '''
 #include <linux/sched.h>
 
 // define output data structure in C
@@ -12,8 +17,10 @@ struct data_t {
     char comm[TASK_COMM_LEN];
 };
 BPF_PERF_OUTPUT(events);
+'''
 
-int syscall_probe_execve(void *ctx) {
+probe_code = '''
+int syscall_probe_SYSCALL(void *ctx) {
     struct data_t data = {};
 
     data.category = 0;
@@ -26,7 +33,7 @@ int syscall_probe_execve(void *ctx) {
     return 0;
 }
 
-int syscall_retprobe_execve(void *ctx) {
+int syscall_retprobe_SYSCALL(void *ctx) {
     struct data_t data = {};
 
     data.category = 1;
@@ -39,7 +46,12 @@ int syscall_retprobe_execve(void *ctx) {
     return 0;
 }
 '''
-print('Tracing execve()... Ctrl-C to end.')
+
+# execve
+execve_code = replace_syscall(probe_code, 'execve')
+
+# merge all code
+program = header + '\n' + execve_code
 
 b = BPF(text=program)
 execve_fnname = b.get_syscall_fnname("execve")
@@ -63,6 +75,7 @@ def print_event(cpu, data, size):
     )
 
 # loop with callback to print_event
+print('Tracing execve()... Ctrl-C to end.')
 b["events"].open_perf_buffer(print_event)
 while 1:
     try:
