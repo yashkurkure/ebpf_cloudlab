@@ -69,18 +69,18 @@ int syscall_retprobe_SYSCALL(void *ctx) {
 
 program = header + '\n'
 for syscall_name in list_syscalls:
-    name = syscall_name.decode()
-    program += replace_syscall(probe_code, name) + '\n'
+    # name = syscall_name.decode()
+    program += replace_syscall(probe_code, syscall_name) + '\n'
 
 b = BPF(text=program)
 for syscall_name in list_syscalls:
-    name = syscall_name.decode()
-    syscall_fnname = b.get_syscall_fnname(name)
+    # name = syscall_name.decode()
+    syscall_fnname = b.get_syscall_fnname(syscall_name)
     try:
-        b.attach_kprobe(event=syscall_fnname, fn_name=f'syscall_probe_{name}')
-        b.attach_kretprobe(event=syscall_fnname, fn_name=f'syscall_retprobe_{name}')
+        b.attach_kprobe(event=syscall_fnname, fn_name=f'syscall_probe_{syscall_name}')
+        b.attach_kretprobe(event=syscall_fnname, fn_name=f'syscall_retprobe_{syscall_name}')
     except:
-        print(f'Failed to attach probe for: {name}')
+        print(f'Failed to attach probe for: {syscall_name}')
 
 
 # # execve
