@@ -63,8 +63,12 @@ b = BPF(text=program)
 for syscall_name in syscalls.values():
     name = syscall_name.decode()
     syscall_fnname = b.get_syscall_fnname(name)
-    b.attach_kprobe(event=syscall_fnname, fn_name=f'syscall_probe_{name}')
-    b.attach_kretprobe(event=syscall_fnname, fn_name=f'syscall_retprobe_{name}')
+    try:
+        b.attach_kprobe(event=syscall_fnname, fn_name=f'syscall_probe_{name}')
+        b.attach_kretprobe(event=syscall_fnname, fn_name=f'syscall_retprobe_{name}')
+    except:
+        print(f'Failed to attach probe for: {name}')
+
 
 # # execve
 # execve_code = replace_syscall(probe_code, 'execve')
