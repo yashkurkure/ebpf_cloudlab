@@ -2,6 +2,19 @@ from bcc import BPF
 from bcc.utils import printb
 from bcc.syscall import syscall_name, syscalls
 
+list_syscalls = [
+    'read',
+    'write',
+    'open',
+    'close',
+    'stat',
+    'fstat',
+    'lstat',
+    'poll',
+    'lseek',
+    'mmap'
+]
+
 
 def replace_syscall(original_string, replacement_text):
     new_string = original_string[:]
@@ -55,12 +68,12 @@ int syscall_retprobe_SYSCALL(void *ctx) {
 '''
 
 program = header + '\n'
-for syscall_name in syscalls.values():
+for syscall_name in list_syscalls:
     name = syscall_name.decode()
     program += replace_syscall(probe_code, name) + '\n'
 
 b = BPF(text=program)
-for syscall_name in syscalls.values():
+for syscall_name in list_syscalls:
     name = syscall_name.decode()
     syscall_fnname = b.get_syscall_fnname(name)
     try:
