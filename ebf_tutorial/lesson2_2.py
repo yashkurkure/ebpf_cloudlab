@@ -15,6 +15,7 @@ struct data_t {
     u32 pid;
     u64 ts;
     char comm[TASK_COMM_LEN];
+    char syscall_name[100];
 };
 BPF_PERF_OUTPUT(events);
 '''
@@ -23,6 +24,7 @@ probe_code = '''
 int syscall_probe_SYSCALL(void *ctx) {
     struct data_t data = {};
 
+    data.syscall_name = "SYSCALL\0"
     data.category = 0;
     data.pid = bpf_get_current_pid_tgid();
     data.ts = bpf_ktime_get_ns();
@@ -36,6 +38,7 @@ int syscall_probe_SYSCALL(void *ctx) {
 int syscall_retprobe_SYSCALL(void *ctx) {
     struct data_t data = {};
 
+    data.syscall_name = "SYSCALL\0"
     data.category = 1;
     data.pid = bpf_get_current_pid_tgid();
     data.ts = bpf_ktime_get_ns();
@@ -74,7 +77,7 @@ b.attach_kretprobe(event=execve_fnname, fn_name="syscall_retprobe_exit")
 
 # header
 print('Tracing syscalls... Ctrl-C to end.')
-print("%-18s %-16s %-6s %s" % ("TIME(s)", "COMM", "PID", "CATEGORY"))
+print("%-18s %-16s %-6s %s %s" % ("TIME(s)", "COMM", "PID", "CATEGORY", "SYSCALL NAME"))
 
 # process event
 start = 0
@@ -85,8 +88,8 @@ def print_event(cpu, data, size):
     event = b["events"].event(data)
     time_s = (float(event.ts)) / 1000000000
     printb(
-        b"%-18.9f %-16s %-6d %d"
-        % (time_s, event.comm, event.pid, event.category)
+        b"%-18.9f %-16s %-6d %d %s"
+        % (time_s, event.comm, event.pid, event.category, event.syscall_name)
     )
 
 # loop with callback to print_event
