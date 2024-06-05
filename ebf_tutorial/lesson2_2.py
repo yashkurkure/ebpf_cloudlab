@@ -13,7 +13,7 @@ struct data_t {
 };
 BPF_PERF_OUTPUT(events);
 
-int kprobe__execve(void *ctx) {
+int syscall_probe_execve(void *ctx) {
     struct data_t data = {};
 
     data.category = 0;
@@ -26,7 +26,7 @@ int kprobe__execve(void *ctx) {
     return 0;
 }
 
-int kretprobe__execve(void *ctx) {
+int syscall_retprobe_execve(void *ctx) {
     struct data_t data = {};
 
     data.category = 1;
@@ -42,6 +42,9 @@ int kretprobe__execve(void *ctx) {
 print('Tracing execve()... Ctrl-C to end.')
 
 b = BPF(text=program)
+execve_fnname = b.get_syscall_fnname("execve")
+b.attach_kprobe(event=execve_fnname, fn_name="syscall_probe_execve")
+b.attach_kretprobe(event=execve_fnname, fn_name="syscall_retprobe_execve")
 
 # header
 print("%-18s %-16s %-6s %s" % ("TIME(s)", "COMM", "PID", "CATEGORY"))
