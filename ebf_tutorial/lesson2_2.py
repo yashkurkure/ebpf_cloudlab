@@ -4,7 +4,7 @@ from bcc.syscall import syscall_name, syscalls
 
 list_syscalls = [
     'read',
-    'write',
+#'write',
     'open',
     'close',
     'stat',
@@ -12,7 +12,10 @@ list_syscalls = [
     'lstat',
     'poll',
     'lseek',
-    'mmap'
+    'mmap',
+    'execve',
+    'fork',
+    'exit'
 ]
 
 
