@@ -1,5 +1,5 @@
 # Notes
-# View logs: journalctl -u myservice.service
+# View logs: journalctl -u ebpf.service
 
 
 sudo cp /local/repository/ebpf_service/ebpf.service /etc/systemd/system/ebpf.service

@@ -1,22 +1,16 @@
-import time
-import logging
 import socket
 import threading
-
-logging.basicConfig(filename='/pbsusers/myservice.log', level=logging.INFO)
 
 previous_value = None
 do_something2_running = False
 do_something2_thread = None
 
-# Compile the eBPF program
 def doSomething(value):
     # Your processing logic here (same as before)
     import time
     time.sleep(2)  # Simulate processing time
-    return value
+    return value * 2
 
-# Start eBPF listening
 def doSomething2():
     global do_something2_running
     do_something2_running = True
@@ -29,32 +23,26 @@ def doSomething2():
 def handle_client(client_socket):
     global previous_value, do_something2_running, do_something2_thread
 
-    # Get the sent PID
     data = client_socket.recv(1024)
     try:
         value = int(data.decode())
+        result = doSomething(value)
+        client_socket.send(str(result).encode())
 
-        # No previous PID
         if previous_value is None:
-            result = doSomething(value)
-            client_socket.send(str(result).encode())
             previous_value = value
             do_something2_thread = threading.Thread(target=doSomething2)
             do_something2_thread.start()
-        
-        # Previous PID
         elif value == previous_value:
             do_something2_running = False
             do_something2_thread.join()  # Wait for the thread to finish
-            result = doSomething(value)
-            client_socket.send(str(result).encode())
 
     except ValueError:
         client_socket.send("Invalid input. Please send an integer.".encode())
     finally:
         client_socket.close()
 
-def start_server():
+def main():
     server_address = ('localhost', 8080) 
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind(server_address)
@@ -69,7 +57,5 @@ def start_server():
         client_thread = threading.Thread(target=handle_client, args=(client_socket,))
         client_thread.start()
 
-
-if __name__ == '__main__':
-    while True:
-        start_server()
+if __name__ == "__main__":
+    main()
