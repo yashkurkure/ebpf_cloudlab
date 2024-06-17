@@ -4,8 +4,8 @@ After=network.target
 
 [Service]
 User=root
-WorkingDirectory=/local/repository/ebf_service
-ExecStart=/usr/bin/python3 /local/repository/ebf_service/service.py
+WorkingDirectory=/local/repository/ebpf_service
+ExecStart=/usr/bin/python3 /local/repository/ebpf_service/service.py
 Restart=always
 
 [Install]

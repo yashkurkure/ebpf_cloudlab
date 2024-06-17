@@ -3,8 +3,6 @@ import logging
 import socket
 import threading
 
-logging.basicConfig(filename='/pbsusers/myservice.log', level=logging.INFO)
-
 previous_value = None
 do_something2_running = False
 do_something2_thread = None
@@ -71,5 +69,4 @@ def start_server():
 
 
 if __name__ == '__main__':
-    while True:
-        start_server()
+    start_server()
