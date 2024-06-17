@@ -5,7 +5,9 @@ After=network.target
 [Service]
 User=root
 WorkingDirectory=/local/repository/ebpf_service
-ExecStart=/usr/bin/python3 /local/repository/ebpf_service/service.py
+ExecStart=/usr/bin/python3 -u /local/repository/ebpf_service/service.py
+StandardOutput=append:/local/ebpf_service.log
+StandardError=append:/local/ebpf_service.log
 Restart=always
 
 [Install]
