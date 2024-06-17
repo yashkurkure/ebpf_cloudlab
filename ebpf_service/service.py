@@ -8,7 +8,7 @@ logging.basicConfig(
     level=logging.INFO,  # Adjust the logging level as needed (DEBUG, INFO, WARNING, ERROR, CRITICAL)
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('/path/to/your/logfile.log'),  # File handler
+        logging.FileHandler('/local/ebpf_service.log'),  # File handler
         logging.StreamHandler()  # Console handler
     ]
 )
