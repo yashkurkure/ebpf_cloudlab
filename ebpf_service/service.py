@@ -194,6 +194,7 @@ def handle_client(client_socket):
             logging.info(f"[STOP EBPF] Save syscounts results.")
             result = doSomething2()
             client_socket.send(str(result).encode())
+            curr_pid = None
 
     except ValueError:
         client_socket.send("Invalid input. Please send an integer.".encode())
