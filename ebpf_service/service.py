@@ -145,8 +145,8 @@ def get_time_stamp():
 def doSomething(value):
     global bpf, text
     # Your processing logic here (same as before)
-    text = ("#define FILTER_PPID %d\n" % value) + text
-    bpf = BPF(text=text)
+    pid_text = ("#define FILTER_PPID %d\n" % value) + text
+    bpf = BPF(text=pid_text)
     return value
 
 # End eBPF, get results
