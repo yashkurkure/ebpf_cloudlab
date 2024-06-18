@@ -18,6 +18,7 @@ logging.basicConfig(
 
 bpf = None
 curr_pid= None
+pids_bpf = {}
 text = """
 #include <linux/sched.h>
 
@@ -143,24 +144,24 @@ def get_time_stamp():
 
 # Start eBPF
 def doSomething(value):
-    global bpf, text
+    global text, pids_bpf
     # Your processing logic here (same as before)
     pid_text = ("#define FILTER_PPID %d\n" % value) + text
     bpf = BPF(text=pid_text)
+    pids_bpf[value] = bpf
     return value
 
 # End eBPF, get results
-def doSomething2():
-    global curr_pid
+def doSomething2(value):
+    global pids_bpf
     htab_batch_ops = True if BPF.kernel_struct_has_field(b'bpf_map_ops',
         b'map_lookup_and_delete_batch') == 1 else False
-    timestamp = get_time_stamp()
-    result_file_path = f'/local/counts-{curr_pid}.log'
-    data = bpf["data"]
+    result_file_path = f'/local/counts-{value}.log'
+    data = pids_bpf[value]["data"]
     results = {}
     for k, v in sorted(data.items_lookup_and_delete_batch()
                         if htab_batch_ops else data.items(),
-                        key=lambda kv: -kv[1].value)[:300]:
+                        key=lambda kv: -kv[1].value)[:500]:
             if k.value == 0xFFFFFFFF:
                 continue    # happens occasionally, we don't need it
             results[syscall_name(k.value).decode()] = v.value
@@ -169,11 +170,11 @@ def doSomething2():
                 # Write to the file here
                 for call in results:
                     f.write(f'{call},{results[call]}\n')
-
-    return curr_pid
+    pids_bpf.pop(value)
+    return value
 
 def handle_client(client_socket):
-    global curr_pid
+    global pids_bpf
 
     # Get the sent PID
     data = client_socket.recv(1024)
@@ -183,18 +184,16 @@ def handle_client(client_socket):
         logging.info(f"[CONNECTION] Received PID {pid}")
 
         # No previous PID
-        if curr_pid is None:
+        if pid not in list(pids_bpf.keys()):
             logging.info(f"[START EBPF]")
             result = doSomething(pid)
-            curr_pid = pid
             client_socket.send(str(result).encode())
 
         # Previous PID
-        elif curr_pid == pid:
+        elif pid in list(pids_bpf.keys()):
             logging.info(f"[STOP EBPF] Save syscounts results.")
-            result = doSomething2()
+            result = doSomething2(pid)
             client_socket.send(str(result).encode())
-            curr_pid = None
 
     except ValueError:
         client_socket.send("Invalid input. Please send an integer.".encode())
@@ -205,7 +204,7 @@ def start_server():
     server_address = ('localhost', 8080) 
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind(server_address)
-    server_socket.listen(1)  # Allow only one connection
+    server_socket.listen(10)  # Allow only one connection
 
     logging.info("[SERVER] Server started successfully.")
     while True:
