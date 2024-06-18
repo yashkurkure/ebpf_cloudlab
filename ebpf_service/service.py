@@ -157,14 +157,18 @@ def doSomething2():
     timestamp = get_time_stamp()
     result_file_path = f'/local/counts-{curr_pid}.log'
     data = bpf["data"]
+    results = {}
     for k, v in sorted(data.items_lookup_and_delete_batch()
                         if htab_batch_ops else data.items(),
                         key=lambda kv: -kv[1].value)[:300]:
             if k.value == 0xFFFFFFFF:
                 continue    # happens occasionally, we don't need it
-            with open(result_file_path, "w") as f:
+            results[syscall_name(k.value).decode()] = v.value
+
+    with open(result_file_path, "w") as f:
                 # Write to the file here
-                f.write(f'{syscall_name(k.value)} {v.value}\n')
+                for call in results:
+                    f.write(f'{call},{results[call]}\n')
 
     return curr_pid
 
